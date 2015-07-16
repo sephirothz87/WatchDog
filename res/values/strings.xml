@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">WatchDog</string>
+    <string name="init_text">「監視開始」を押してください</string>
+    <string name="button_01_start_watch">監視開始</string>
+    <string name="button_02_stop_watch">監視終了</string>
+    <string name="init_log">監視情報</string>
+
+</resources>
