@@ -29,14 +29,14 @@ import android.widget.TabHost.TabSpec;
 
 public class MainActivity extends FragmentActivity {
 
-	private TextView mTextStatus;
-	private TextView mTextLog;
-	private ScrollView mScrollLog;
-
-	private Button mButtonStartWatch;
-	private Button mButtonStopWatch;
-
-	private Handler mHandlerLogText = new Handler();
+//	private TextView mTextStatus;
+//	private TextView mTextLog;
+//	private ScrollView mScrollLog;
+//
+//	private Button mButtonStartWatch;
+//	private Button mButtonStopWatch;
+//
+//	private Handler mHandlerLogText = new Handler();
 	
 	private FragmentTabHost mTabHost;
 
@@ -73,18 +73,18 @@ public class MainActivity extends FragmentActivity {
 //			mTabHost.getTabWidget().getChildAt(i).setBackgroundResource(R.drawable.nav_background);
 		}
 
-	    mIntent = new Intent(MainActivity.this, WatchService.class);
-	    bindService(mIntent, mServiceConnection, Service.BIND_AUTO_CREATE);
+//	    mIntent = new Intent(MainActivity.this, WatchService.class);
+//	    bindService(mIntent, mServiceConnection, Service.BIND_AUTO_CREATE);
 
-		mTextStatus = (TextView) findViewById(R.id.text);
-		mTextLog = (TextView) findViewById(R.id.log);
-
-		mScrollLog = (ScrollView) findViewById(R.id.scroll_log);
-
-		mButtonStartWatch = (Button) findViewById(R.id.button_01_start_watch);
-
-		mButtonStopWatch = (Button) findViewById(R.id.button_02_stop_watch);
-
+//		mTextStatus = (TextView) findViewById(R.id.text);
+//		mTextLog = (TextView) findViewById(R.id.log);
+//
+//		mScrollLog = (ScrollView) findViewById(R.id.scroll_log);
+//
+//		mButtonStartWatch = (Button) findViewById(R.id.button_01_start_watch);
+//
+//		mButtonStopWatch = (Button) findViewById(R.id.button_02_stop_watch);
+//
 //		mButtonStartWatch.setOnClickListener(mButtonStartWatchListener);
 //		mButtonStopWatch.setOnClickListener(mButtonStoptWatchListener);
 	}
@@ -93,99 +93,99 @@ public class MainActivity extends FragmentActivity {
 	protected void onDestroy() {
 		// test
 		android.util.Log.d(Util.COMMON_TAG, "on destroy");
-		unbindService(mServiceConnection);
+//		unbindService(mServiceConnection);
 		super.onDestroy();
 	}
 
-	OnClickListener mButtonStartWatchListener = new OnClickListener() {
-		@Override
-		public void onClick(View v) {
-			// test
-			android.util.Log.d(Util.COMMON_TAG,
-					"mButtonStartWatchListener funced");
-			// mTextStatus.setText("mButtonStartWatchListener funced");
-
-			// android.util.Log.d(Util.COMMON_TAG,
-			// "mButtonStartWatchListener funced");
-			// PackageInfo.printProcessList(mActivityManager);
-			//
-			// int pid = PackageInfo.getPidByPName(mActivityManager,
-			// Util.PACKAGE_NAME);
-			// android.util.Log.d(Util.COMMON_TAG, Util.PACKAGE_NAME +
-			// "'s PID = "
-			// + pid);
-			// doStartApplicationWithPackageName(Util.PACKAGE_NAME);
-			
-//		    mIntent = new Intent(MainActivity.this, WatchService.class);
-//		    bindService(mIntent, mServiceConnection, Service.BIND_AUTO_CREATE);
-
-			mWatchServiceBinder.startWatch();
-		}
-	};
+//	OnClickListener mButtonStartWatchListener = new OnClickListener() {
+//		@Override
+//		public void onClick(View v) {
+//			// test
+//			android.util.Log.d(Util.COMMON_TAG,
+//					"mButtonStartWatchListener funced");
+//			// mTextStatus.setText("mButtonStartWatchListener funced");
+//
+//			// android.util.Log.d(Util.COMMON_TAG,
+//			// "mButtonStartWatchListener funced");
+//			// PackageInfo.printProcessList(mActivityManager);
+//			//
+//			// int pid = PackageInfo.getPidByPName(mActivityManager,
+//			// Util.PACKAGE_NAME);
+//			// android.util.Log.d(Util.COMMON_TAG, Util.PACKAGE_NAME +
+//			// "'s PID = "
+//			// + pid);
+//			// doStartApplicationWithPackageName(Util.PACKAGE_NAME);
+//			
+////		    mIntent = new Intent(MainActivity.this, WatchService.class);
+////		    bindService(mIntent, mServiceConnection, Service.BIND_AUTO_CREATE);
+//
+////			mWatchServiceBinder.startWatch();
+//		}
+//	};
 	
-	OnClickListener mButtonStoptWatchListener = new OnClickListener() {
-		@Override
-		public void onClick(View v) {
-			// test
-			android.util.Log.d(Util.COMMON_TAG,
-					"mButtonStopWatchListener funced");
-			// mTextStatus.setText("mButtonStoptWatchListener funced");
-//			unbindService(mServiceConnection);
-
-			mWatchServiceBinder.stopWatch();
-		}
-	};
+//	OnClickListener mButtonStoptWatchListener = new OnClickListener() {
+//		@Override
+//		public void onClick(View v) {
+//			// test
+//			android.util.Log.d(Util.COMMON_TAG,
+//					"mButtonStopWatchListener funced");
+//			// mTextStatus.setText("mButtonStoptWatchListener funced");
+////			unbindService(mServiceConnection);
+//
+////			mWatchServiceBinder.stopWatch();
+//		}
+//	};
 	
-	public IWatchService mIWatchService = new IWatchService() {
-		@Override
-		public void setStatusText(String s) {
-			mTextStatus.setText(s);
-		}
-
-		@Override
-		public void updateLogText(String log) {
-			mTextLog.append("\n" + log);
-			mHandlerLogText.post(new Runnable() {
-				@Override
-				public void run() {
-					mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
-				}
-			});
-		}
-
-		@Override
-		public void pullUpApp() {
-			Intent intent = new Intent(Intent.ACTION_MAIN);
-			intent.addCategory(Intent.CATEGORY_LAUNCHER);
-			ComponentName com_name = new ComponentName(
-					Util.PACKAGE_NAME, Util.CLASS_NAME);
-			intent.setComponent(com_name);
-			startActivity(intent);
-		}
-	};
-
-	WatchServiceBinder mWatchServiceBinder;
-	Service mWatchService;
-
-	Intent mIntent;
-	private ServiceConnection mServiceConnection = new ServiceConnection() {
-
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			android.util.Log.d(Util.COMMON_TAG, "onServiceConnected is called");
-			mWatchServiceBinder = (WatchServiceBinder) service;
-			mWatchService = mWatchServiceBinder.getService();
-			mWatchServiceBinder.setInterface(mIWatchService);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			android.util.Log.d(Util.COMMON_TAG,
-					"onServiceDisconnected is called");
-			mWatchService = null;
-			mWatchServiceBinder = null;
-		}
-	};
+//	public IWatchService mIWatchService = new IWatchService() {
+//		@Override
+//		public void setStatusText(String s) {
+//			mTextStatus.setText(s);
+//		}
+//
+//		@Override
+//		public void updateLogText(String log) {
+//			mTextLog.append("\n" + log);
+//			mHandlerLogText.post(new Runnable() {
+//				@Override
+//				public void run() {
+//					mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
+//				}
+//			});
+//		}
+//
+//		@Override
+//		public void pullUpApp() {
+//			Intent intent = new Intent(Intent.ACTION_MAIN);
+//			intent.addCategory(Intent.CATEGORY_LAUNCHER);
+//			ComponentName com_name = new ComponentName(
+//					Util.PACKAGE_NAME, Util.CLASS_NAME);
+//			intent.setComponent(com_name);
+//			startActivity(intent);
+//		}
+//	};
+//
+//	WatchServiceBinder mWatchServiceBinder;
+//	Service mWatchService;
+//
+//	Intent mIntent;
+//	private ServiceConnection mServiceConnection = new ServiceConnection() {
+//
+//		@Override
+//		public void onServiceConnected(ComponentName name, IBinder service) {
+//			android.util.Log.d(Util.COMMON_TAG, "onServiceConnected is called");
+//			mWatchServiceBinder = (WatchServiceBinder) service;
+//			mWatchService = mWatchServiceBinder.getService();
+//			mWatchServiceBinder.setInterface(mIWatchService);
+//		}
+//
+//		@Override
+//		public void onServiceDisconnected(ComponentName name) {
+//			android.util.Log.d(Util.COMMON_TAG,
+//					"onServiceDisconnected is called");
+//			mWatchService = null;
+//			mWatchServiceBinder = null;
+//		}
+//	};
    
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
