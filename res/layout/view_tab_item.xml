@@ -4,15 +4,14 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context="com.example.template_fragment.MainActivity"
-    android:background="#2973C0" >
+    tools:context="com.example.template_fragment.MainActivity">
 
     <ImageView
         android:id="@+id/image_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:focusable="false"
-        android:src="@drawable/btn_nav_01">
+        android:background="@drawable/btn_nav_01">
     </ImageView>
 
 </LinearLayout>
