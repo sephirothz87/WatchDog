@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 
+//TODO comment追加
 public class WatchService extends Service {
 	private final static String TAG = "WatchService";
 	private boolean mIsWatching = false;

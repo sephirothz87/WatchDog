@@ -4,16 +4,21 @@ import java.util.List;
 
 import android.app.ActivityManager;
 
+/**
+ * プロセス情報管理
+ *
+ * @author	Zhong Zhicong
+ * @time	2015-7-17
+ */
 public class ProcessInfo {
 	private final static String TAG = "PackageInfo";
 
 	/**
-	 * 取得进程列表
+	 * プロセスリスト取得
 	 * 
 	 * @param act_mgr
-	 *            ActivityManager对象，在Activity内获取：ActivityManager act_mgr =
-	 *            (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-	 * @return 进程列表
+	 *            ActivityManagerオブジェクト
+	 * @return プロセスリスト
 	 */
 	public static List<ActivityManager.RunningAppProcessInfo> getAppProcessInfoList(
 			ActivityManager act_mgr) {
@@ -23,11 +28,10 @@ public class ProcessInfo {
 	}
 
 	/**
-	 * 打印进程名称和进程id列表
+	 * プロセスリスト出力
 	 * 
 	 * @param act_mgr
-	 *            ActivityManager对象，在Activity内获取：ActivityManager act_mgr =
-	 *            (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+	 *            ActivityManagerオブジェクト
 	 */
 	public static void printProcessList(ActivityManager act_mgr) {
 		List<ActivityManager.RunningAppProcessInfo> appProcessList = getAppProcessInfoList(act_mgr);
@@ -38,14 +42,13 @@ public class ProcessInfo {
 	}
 
 	/**
-	 * 根据指定进程名获得pid
+	 * プロセスID取得
 	 * 
 	 * @param act_mgr
-	 *            ActivityManager对象，在Activity内获取：ActivityManager act_mgr =
-	 *            (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+	 *            ActivityManagerオブジェクト
 	 * @param p_name
-	 *            进程名，如"com.tencent.qqlive"
-	 * @return 进程id,pid
+	 *            パッケージ名，例「com.xxx.xxx」
+	 * @return プロセスID
 	 */
 	public static int getPidByPName(ActivityManager act_mgr, String p_name) {
 		int pid = -1;
@@ -57,27 +60,5 @@ public class ProcessInfo {
 			}
 		}
 		return pid;
-	}
-
-	/**
-	 * 根据指定进程名获得uid
-	 * 
-	 * @param act_mgr
-	 *            ActivityManager对象，在Activity内获取：ActivityManager act_mgr =
-	 *            (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-	 * @param p_name
-	 *            进程名，如"com.tencent.qqlive"
-	 * @return 用户id，uid
-	 */
-	public static int getUidByPName(ActivityManager act_mgr, String p_name) {
-		int uid = -1;
-		List<ActivityManager.RunningAppProcessInfo> appProcessList = getAppProcessInfoList(act_mgr);
-		for (ActivityManager.RunningAppProcessInfo appProcessInfo : appProcessList) {
-			if (appProcessInfo.processName.equals(p_name)) {
-				uid = appProcessInfo.uid;
-				break;
-			}
-		}
-		return uid;
 	}
 }
