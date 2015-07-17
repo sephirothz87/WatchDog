@@ -67,10 +67,16 @@ public class ProcessInfo {
 		return pid;
 	}
 	
+	/**
+	 * 起動クラス名取得
+	 * 
+	 * @param pkgManager	パッケージ管理機（アクティビティ、サービスないgetPackageManager()メソッドで取得）
+	 * @param pkgName		パッケージ名
+	 * @return　該当アプリの起動クラス名
+	 */
 	public static String getClassNameByPkgName(PackageManager pkgManager,String pkgName){
 		String clsName=null;
 		
-		// 通过包名获取此APP详细信息，包括Activities、services、versioncode、name等等  
 	    PackageInfo packageinfo = null;  
 	    try {  
 	        packageinfo = pkgManager.getPackageInfo(pkgName, 0);  
@@ -82,12 +88,10 @@ public class ProcessInfo {
 	        return null;
 	    }
 	  
-	    // 创建一个类别为CATEGORY_LAUNCHER的该包名的Intent  
 	    Intent resolveIntent = new Intent(Intent.ACTION_MAIN, null);  
 	    resolveIntent.addCategory(Intent.CATEGORY_LAUNCHER);  
 	    resolveIntent.setPackage(packageinfo.packageName);
 	  
-	    // 通过getPackageManager()的queryIntentActivities方法遍历  
 	    List<ResolveInfo> resolveinfoList = pkgManager.queryIntentActivities(resolveIntent, 0);  
 	  
 	    ResolveInfo resolveinfo = resolveinfoList.iterator().next();  
