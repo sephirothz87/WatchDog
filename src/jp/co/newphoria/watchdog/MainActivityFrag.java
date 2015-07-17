@@ -13,6 +13,7 @@ public class MainActivityFrag extends FragmentActivity {
 
 	private LayoutInflater mLayoutInflater;
 
+	@SuppressWarnings("rawtypes")
 	private Class mFragments[] = { Fragment01.class, Fragment02.class,
 			Fragment03.class, Fragment04.class };
 
