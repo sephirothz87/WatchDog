@@ -1,6 +1,5 @@
 package jp.co.newphoria.watchdog;
 
-import jp.co.newphoria.watchdog.util.Util;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
@@ -14,7 +13,7 @@ import android.widget.ImageView;
 import android.widget.TabHost.TabSpec;
 
 public class MainActivity extends FragmentActivity {
-	
+
 	private FragmentTabHost mTabHost;
 
 	private LayoutInflater mLayoutInflater;
@@ -25,14 +24,11 @@ public class MainActivity extends FragmentActivity {
 
 	private int mNavImages[] = { R.drawable.btn_nav_01, R.drawable.btn_nav_02,
 			R.drawable.btn_nav_02, R.drawable.btn_nav_02 };
-	
-	private String mTabTag[]={"home","extend2","extend3","extend4"};
+
+	private String mTabTag[] = { "home", "extend2", "extend3", "extend4" };
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// test
-		android.util.Log.d(Util.COMMON_TAG, "build no.0005");
-
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -52,34 +48,31 @@ public class MainActivity extends FragmentActivity {
 
 	@Override
 	protected void onDestroy() {
-		// test
-		android.util.Log.d(Util.COMMON_TAG, "on destroy");
 		super.onDestroy();
 	}
-   
+
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-			android.util.Log.d(Util.COMMON_TAG, "back clicked");
 			showExitDialog();
 			return true;
 		}
 
 		return super.onKeyDown(keyCode, event);
 	}
-	
-	protected void showExitDialog(){
-		AlertDialog.Builder builder=new Builder(MainActivity.this);
+
+	protected void showExitDialog() {
+		AlertDialog.Builder builder = new Builder(MainActivity.this);
 		builder.setMessage("アプリ停止し、監視終了がいいですか。");
 		builder.setTitle("注意");
-		builder.setPositiveButton("はい", new DialogInterface.OnClickListener(){
+		builder.setPositiveButton("はい", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 				finish();
 			}
 		});
-		builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener(){
+		builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
@@ -87,7 +80,7 @@ public class MainActivity extends FragmentActivity {
 		});
 		builder.create().show();
 	}
-	
+
 	private View getTabItemView(int index) {
 		View view = mLayoutInflater.inflate(R.layout.view_tab_item, null);
 

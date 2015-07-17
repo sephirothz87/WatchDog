@@ -6,5 +6,8 @@
     <string name="button_01_start_watch">監視開始</string>
     <string name="button_02_stop_watch">監視終了</string>
     <string name="init_log">監視情報</string>
+    <string name="frag_02_txt">拡張fragment-2</string>
+    <string name="frag_03_txt">拡張fragment-3</string>
+    <string name="frag_04_txt">拡張fragment-4</string>
 
 </resources>
