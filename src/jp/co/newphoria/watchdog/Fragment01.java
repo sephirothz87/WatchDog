@@ -80,6 +80,23 @@ public class Fragment01 extends Fragment {
 	}
 
 	@Override
+	public void onResume() {
+		super.onResume();
+
+		if (mWatchServiceBinder == null) {
+			return;
+		}
+
+		if (mWatchServiceBinder.getWatchingStatue()) {
+			mTextStatus.setText("監視中");
+		}
+
+		if (mWatchServiceBinder.getPackageName() != null) {
+			mEditTextPackage.setText(mWatchServiceBinder.getPackageName());
+		}
+	}
+
+	@Override
 	public void onDestroy() {
 		// アプリ終了時、監視サービスを解く
 		getActivity().unbindService(mServiceConnection);
