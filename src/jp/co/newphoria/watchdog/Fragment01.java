@@ -3,7 +3,6 @@ package jp.co.newphoria.watchdog;
 import jp.co.newphoria.watchdog.service.IWatchService;
 import jp.co.newphoria.watchdog.service.WatchService;
 import jp.co.newphoria.watchdog.service.WatchService.WatchServiceBinder;
-import jp.co.newphoria.watchdog.util.Util;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -17,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -30,6 +30,8 @@ public class Fragment01 extends Fragment {
 	//ログタッグ
 	private final static String TAG = "Fragment01";
 
+	//監視したいパッケージ入力枠
+	private EditText mEditTextPackage;
 	//監視状態表示テキスト
 	private TextView mTextStatus;
 	//監視情報表示テキスト
@@ -58,6 +60,8 @@ public class Fragment01 extends Fragment {
 		mIntent = new Intent(getActivity(), WatchService.class);
 		getActivity().bindService(mIntent, mServiceConnection,
 				Service.BIND_AUTO_CREATE);
+
+		mEditTextPackage = (EditText) getActivity().findViewById(R.id.edtxt_pkg);
 
 		mTextStatus = (TextView) getActivity().findViewById(R.id.text);
 		mTextLog = (TextView) getActivity().findViewById(R.id.log);
@@ -122,6 +126,12 @@ public class Fragment01 extends Fragment {
 
 	//サービスcallback用インターフェース
 	public IWatchService mIWatchService = new IWatchService() {
+		//監視アプリパッケージネーム取得
+		@Override
+		public String getTestPackageName() {
+			return mEditTextPackage.getText().toString();
+		}
+		
 		//監視状態テキスト変更
 		@Override
 		public void setStatusText(String s) {
@@ -139,17 +149,6 @@ public class Fragment01 extends Fragment {
 					mScrollLog.fullScroll(ScrollView.FOCUS_DOWN);
 				}
 			});
-		}
-
-		//監視情報テキスト変更（結末追加）
-		@Override
-		public void pullUpApp() {
-			Intent intent = new Intent(Intent.ACTION_MAIN);
-			intent.addCategory(Intent.CATEGORY_LAUNCHER);
-			ComponentName com_name = new ComponentName(Util.PACKAGE_NAME,
-					Util.CLASS_NAME);
-			intent.setComponent(com_name);
-			startActivity(intent);
 		}
 	};
 }

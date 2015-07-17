@@ -11,10 +11,27 @@
     tools:context="jp.co.newphoria.watchdog.MainActivity" >
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/txt_input_please" />
+    
+    <EditText
+        android:id="@+id/edtxt_pkg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:gravity="center"
+        android:singleLine="true"
+        android:inputType="text"
+        android:text="@string/edtxt_pkg_name"/>
+
+    <TextView
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/init_text" />
+        android:layout_marginTop="20dp"
+        android:text="@string/txt_init" />
 
     <Button
         android:id="@+id/button_01_start_watch"

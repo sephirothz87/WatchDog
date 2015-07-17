@@ -4,6 +4,7 @@ import jp.co.newphoria.watchdog.module.ProcessInfo;
 import jp.co.newphoria.watchdog.util.Util;
 import android.app.ActivityManager;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
@@ -22,6 +23,9 @@ public class WatchService extends Service {
 	private int mTimeInterval = 3;
 
 	private ActivityManager mActivityManager;
+	
+	private String mPackageName;
+	private String mClassName;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -67,6 +71,20 @@ public class WatchService extends Service {
 
 		public void startWatch() {
 			if (!mIsWatching) {
+				
+				mPackageName=mIWatchService.getTestPackageName();
+				mClassName=ProcessInfo.getClassNameByPkgName(getPackageManager(),mPackageName);
+				
+				if(mPackageName==null||mPackageName.length()==0){
+					mIWatchService.updateLogText("package name is null");
+					return;
+				}
+				
+				if(mClassName==null){
+					mIWatchService.updateLogText("package not found");
+					return;
+				}
+
 				mIsWatching = true;
 				mIWatchService.setStatusText("監視中");
 				mIWatchService.updateLogText("start watching");
@@ -97,28 +115,56 @@ public class WatchService extends Service {
 		@Override
 		public void handleMessage(Message msg) {
 			if (mIsWatching) {
+				if (mPackageName == null) {
+					mPackageName = Util.PACKAGE_NAME;
+				}
+
 				int pid = ProcessInfo.getPidByPName(mActivityManager,
-						Util.PACKAGE_NAME);
+						mPackageName);
 				android.util.Log.d(TAG, "pid = " + pid);
 				// MOCK
 				// if(Math.random()<0.95){
 				if (pid != -1) {
 					mIWatchService.updateLogText("[" + Util.getTime() + "]"
-							+ Util.PACKAGE_NAME + " is running");
+							+ mPackageName + " is running");
 					this.sendEmptyMessageDelayed(0, mTimeInterval * 1000);
 				} else {
 					mIWatchService.updateLogText("[" + Util.getTime() + "]"
-							+ Util.PACKAGE_NAME + " is stop");
-
-					mIWatchService.pullUpApp();
+							+ mPackageName + " is stop");
 
 					mIWatchService.updateLogText("[" + Util.getTime()
-							+ "]pull up " + Util.PACKAGE_NAME);
+							+ "]pull up app \n package name = " + mPackageName
+							+ "\n class name = " + mClassName);
+
+//					if (mIWatchService.pullUpApp(mPackageName, mClassName) < 0) {
+					if (pullUpApp(mPackageName, mClassName) < 0) {
+						mIWatchService.updateLogText(mPackageName
+								+ " start failed");
+					}
+
 					this.sendEmptyMessageDelayed(0, mTimeInterval * 1000);
 				}
 			} else {
 				android.util.Log.d(TAG, "is Watching = false, stop watch");
 			}
 		}
+	}
+
+	public int pullUpApp(String pkgName, String clsName) {
+		Intent intent = new Intent(Intent.ACTION_MAIN);
+		intent.addCategory(Intent.CATEGORY_LAUNCHER);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+		try {
+			ComponentName com_name = new ComponentName(pkgName, clsName);
+			intent.setComponent(com_name);
+			
+			getApplication().startActivity(intent);
+		} catch (Exception e) {
+			android.util.Log.d(TAG, "pullUpApp fail");
+			return -1;
+		}
+		
+		return 0;
 	}
 }
