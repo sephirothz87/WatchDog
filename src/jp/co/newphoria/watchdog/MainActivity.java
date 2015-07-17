@@ -15,8 +15,8 @@ import android.widget.TabHost.TabSpec;
 /**
  * アプリの主アクティビティ
  *
- * @author	Zhong Zhicong
- * @time	2015-7-17
+ * @author Zhong Zhicong
+ * @time 2015-7-17
  */
 public class MainActivity extends FragmentActivity {
 
@@ -24,16 +24,16 @@ public class MainActivity extends FragmentActivity {
 
 	private LayoutInflater mLayoutInflater;
 
-	//fragmentsアレイ
+	// fragmentsアレイ
 	@SuppressWarnings("rawtypes")
 	private Class mFragments[] = { Fragment01.class, Fragment02.class,
 			Fragment03.class, Fragment04.class };
 
-	//ナビバーの背景画像アレイ
+	// ナビバーの背景画像アレイ
 	private int mNavImages[] = { R.drawable.btn_nav_01, R.drawable.btn_nav_02,
 			R.drawable.btn_nav_02, R.drawable.btn_nav_02 };
 
-	//fragmentsのタグアレイ
+	// fragmentsのタグアレイ
 	private String mTabTag[] = { "home", "extend2", "extend3", "extend4" };
 
 	@Override
@@ -41,7 +41,7 @@ public class MainActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		//fragment初期化
+		// fragment初期化
 		mLayoutInflater = LayoutInflater.from(this);
 
 		mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
@@ -61,7 +61,7 @@ public class MainActivity extends FragmentActivity {
 		super.onDestroy();
 	}
 
-	//Backキー動作定義
+	// Backキー動作定義
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
@@ -72,13 +72,13 @@ public class MainActivity extends FragmentActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 
-	//終了ダイアログ表示
+	// 終了ダイアログ表示
 	protected void showExitDialog() {
 		AlertDialog.Builder builder = new Builder(MainActivity.this);
 		builder.setMessage("アプリ停止し、監視終了がいいですか。");
 		builder.setTitle("注意");
-		
-		//「はい」ボタン、監視終了し、Watchdog終了
+
+		// 「はい」ボタン、監視終了し、Watchdog終了
 		builder.setPositiveButton("はい", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -86,8 +86,8 @@ public class MainActivity extends FragmentActivity {
 				finish();
 			}
 		});
-		
-		//「いいえ」ボタン、ダイアログ閉じ
+
+		// 「いいえ」ボタン、ダイアログ閉じ
 		builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -97,7 +97,7 @@ public class MainActivity extends FragmentActivity {
 		builder.create().show();
 	}
 
-	//ナビバーの背景画像指定
+	// ナビバーの背景画像指定
 	private View getTabItemView(int index) {
 		View view = mLayoutInflater.inflate(R.layout.view_tab_item, null);
 

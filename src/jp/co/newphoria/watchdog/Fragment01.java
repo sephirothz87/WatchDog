@@ -23,28 +23,28 @@ import android.widget.TextView;
 /**
  * アプリの主fragment
  *
- * @author	Zhong Zhicong
- * @time	2015-7-17
+ * @author Zhong Zhicong
+ * @time 2015-7-17
  */
 public class Fragment01 extends Fragment {
-	//ログタッグ
+	// ログタッグ
 	private final static String TAG = "Fragment01";
 
-	//監視したいパッケージ入力枠
+	// 監視したいパッケージ入力枠
 	private EditText mEditTextPackage;
-	//監視状態表示テキスト
+	// 監視状態表示テキスト
 	private TextView mTextStatus;
-	//監視情報表示テキスト
+	// 監視情報表示テキスト
 	private TextView mTextLog;
-	//監視情報表示スクロール制御
+	// 監視情報表示スクロール制御
 	private ScrollView mScrollLog;
 
-	//監視開始ボタン
+	// 監視開始ボタン
 	private Button mButtonStartWatch;
-	//監視終了ボタン
+	// 監視終了ボタン
 	private Button mButtonStopWatch;
 
-	//監視情報更新用処理ハンドラ
+	// 監視情報更新用処理ハンドラ
 	private Handler mHandlerLogText = new Handler();
 
 	@Override
@@ -61,7 +61,8 @@ public class Fragment01 extends Fragment {
 		getActivity().bindService(mIntent, mServiceConnection,
 				Service.BIND_AUTO_CREATE);
 
-		mEditTextPackage = (EditText) getActivity().findViewById(R.id.edtxt_pkg);
+		mEditTextPackage = (EditText) getActivity()
+				.findViewById(R.id.edtxt_pkg);
 
 		mTextStatus = (TextView) getActivity().findViewById(R.id.text);
 		mTextLog = (TextView) getActivity().findViewById(R.id.log);
@@ -80,7 +81,7 @@ public class Fragment01 extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		//アプリ終了時、監視サービスを解く
+		// アプリ終了時、監視サービスを解く
 		getActivity().unbindService(mServiceConnection);
 		super.onDestroy();
 	}
@@ -88,7 +89,7 @@ public class Fragment01 extends Fragment {
 	OnClickListener mButtonStartWatchListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			//監視開始
+			// 監視開始
 			mWatchServiceBinder.startWatch();
 		}
 	};
@@ -96,18 +97,18 @@ public class Fragment01 extends Fragment {
 	OnClickListener mButtonStoptWatchListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			//監視終了
+			// 監視終了
 			mWatchServiceBinder.stopWatch();
 		}
 	};
 
-	//監視サービスバンダー
+	// 監視サービスバンダー
 	WatchServiceBinder mWatchServiceBinder;
-	//監視サービス
+	// 監視サービス
 	Service mWatchService;
-	//監視サービス起動インテント
+	// 監視サービス起動インテント
 	Intent mIntent;
-	//監視サービス連結
+	// 監視サービス連結
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 
 		@Override
@@ -124,21 +125,21 @@ public class Fragment01 extends Fragment {
 		}
 	};
 
-	//サービスcallback用インターフェース
+	// サービスcallback用インターフェース
 	public IWatchService mIWatchService = new IWatchService() {
-		//監視アプリパッケージネーム取得
+		// 監視アプリパッケージネーム取得
 		@Override
 		public String getTestPackageName() {
 			return mEditTextPackage.getText().toString();
 		}
-		
-		//監視状態テキスト変更
+
+		// 監視状態テキスト変更
 		@Override
 		public void setStatusText(String s) {
 			mTextStatus.setText(s);
 		}
 
-		//監視情報テキスト変更（結末追加）
+		// 監視情報テキスト変更（結末追加）
 		@Override
 		public void updateLogText(String log) {
 			mTextLog.append("\n" + log);

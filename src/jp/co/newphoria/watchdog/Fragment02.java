@@ -9,8 +9,8 @@ import android.view.ViewGroup;
 /**
  * 機能拡張用fragment
  *
- * @author	Zhong Zhicong
- * @time	2015-7-17
+ * @author Zhong Zhicong
+ * @time 2015-7-17
  */
 public class Fragment02 extends Fragment {
 

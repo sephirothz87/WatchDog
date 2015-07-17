@@ -12,8 +12,8 @@ import android.content.pm.ResolveInfo;
 /**
  * プロセス情報管理
  *
- * @author	Zhong Zhicong
- * @time	2015-7-17
+ * @author Zhong Zhicong
+ * @time 2015-7-17
  */
 public class ProcessInfo {
 	private final static String TAG = "PackageInfo";
@@ -66,39 +66,43 @@ public class ProcessInfo {
 		}
 		return pid;
 	}
-	
+
 	/**
 	 * 起動クラス名取得
 	 * 
-	 * @param pkgManager	パッケージ管理機（アクティビティ、サービスないgetPackageManager()メソッドで取得）
-	 * @param pkgName		パッケージ名
+	 * @param pkgManager
+	 *            パッケージ管理機（アクティビティ、サービスないgetPackageManager()メソッドで取得）
+	 * @param pkgName
+	 *            パッケージ名
 	 * @return　該当アプリの起動クラス名
 	 */
-	public static String getClassNameByPkgName(PackageManager pkgManager,String pkgName){
-		String clsName=null;
-		
-	    PackageInfo packageinfo = null;  
-	    try {  
-	        packageinfo = pkgManager.getPackageInfo(pkgName, 0);  
-	    } catch (NameNotFoundException e) {  
-	        e.printStackTrace();
-	    }
-	    
-	    if (packageinfo == null) {  
-	        return null;
-	    }
-	  
-	    Intent resolveIntent = new Intent(Intent.ACTION_MAIN, null);  
-	    resolveIntent.addCategory(Intent.CATEGORY_LAUNCHER);  
-	    resolveIntent.setPackage(packageinfo.packageName);
-	  
-	    List<ResolveInfo> resolveinfoList = pkgManager.queryIntentActivities(resolveIntent, 0);  
-	  
-	    ResolveInfo resolveinfo = resolveinfoList.iterator().next();  
-	    if (resolveinfo != null) {  
-	        clsName = resolveinfo.activityInfo.name;
-	    }  
-		
+	public static String getClassNameByPkgName(PackageManager pkgManager,
+			String pkgName) {
+		String clsName = null;
+
+		PackageInfo packageinfo = null;
+		try {
+			packageinfo = pkgManager.getPackageInfo(pkgName, 0);
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		if (packageinfo == null) {
+			return null;
+		}
+
+		Intent resolveIntent = new Intent(Intent.ACTION_MAIN, null);
+		resolveIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+		resolveIntent.setPackage(packageinfo.packageName);
+
+		List<ResolveInfo> resolveinfoList = pkgManager.queryIntentActivities(
+				resolveIntent, 0);
+
+		ResolveInfo resolveinfo = resolveinfoList.iterator().next();
+		if (resolveinfo != null) {
+			clsName = resolveinfo.activityInfo.name;
+		}
+
 		return clsName;
 	}
 }
