@@ -1,12 +1,8 @@
 package jp.co.newphoria.watchdog;
 
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,7 +12,10 @@ import android.widget.TabHost.TabSpec;
  * アプリの主アクティビティ
  *
  * @author Zhong Zhicong
- * @time 2015-7-17
+ * @time 2015-7-17 
+ * -----------------変更履歴----------------- 
+ * 日付 			変更者 			説明 
+ * 2015-7-22	Zhong Zhicong 	バックキー提示ダイアログ削除
  */
 public class MainActivity extends FragmentActivity {
 
@@ -62,40 +61,41 @@ public class MainActivity extends FragmentActivity {
 	}
 
 	// Backキー動作定義
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-			showExitDialog();
-			return true;
-		}
-
-		return super.onKeyDown(keyCode, event);
-	}
+	// @Override
+	// public boolean onKeyDown(int keyCode, KeyEvent event) {
+	// if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+	// showExitDialog();
+	// finish();
+	// return true;
+	// }
+	//
+	// return super.onKeyDown(keyCode, event);
+	// }
 
 	// 終了ダイアログ表示
-	protected void showExitDialog() {
-		AlertDialog.Builder builder = new Builder(MainActivity.this);
-		builder.setMessage("アプリ停止し、監視終了がいいですか。");
-		builder.setTitle("注意");
-
-		// 「はい」ボタン、監視終了し、Watchdog終了
-		builder.setPositiveButton("はい", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-				finish();
-			}
-		});
-
-		// 「いいえ」ボタン、ダイアログ閉じ
-		builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-		});
-		builder.create().show();
-	}
+	// protected void showExitDialog() {
+	// AlertDialog.Builder builder = new Builder(MainActivity.this);
+	// builder.setMessage("アプリ停止し、監視終了がいいですか。");
+	// builder.setTitle("注意");
+	//
+	// // 「はい」ボタン、監視終了し、Watchdog終了
+	// builder.setPositiveButton("はい", new DialogInterface.OnClickListener() {
+	// @Override
+	// public void onClick(DialogInterface dialog, int which) {
+	// dialog.dismiss();
+	// finish();
+	// }
+	// });
+	//
+	// // 「いいえ」ボタン、ダイアログ閉じ
+	// builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener() {
+	// @Override
+	// public void onClick(DialogInterface dialog, int which) {
+	// dialog.dismiss();
+	// }
+	// });
+	// builder.create().show();
+	// }
 
 	// ナビバーの背景画像指定
 	private View getTabItemView(int index) {

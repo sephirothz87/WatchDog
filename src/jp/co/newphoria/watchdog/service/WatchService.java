@@ -2,12 +2,13 @@ package jp.co.newphoria.watchdog.service;
 
 import jp.co.newphoria.watchdog.module.ProcessInfo;
 import jp.co.newphoria.watchdog.util.Util;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Binder;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -18,15 +19,17 @@ import android.os.Message;
  *
  * @author Zhong Zhicong
  * @time 2015-7-17
+ * -----------------変更履歴-----------------
+ * 日付			変更者				説明
+ * 2015-7-22	Zhong Zhicong	サービス起動方式、bind→startになる。callback方式は、broadcastで実現
+ * 2015-7-22	Zhong Zhicong	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
  */
 public class WatchService extends Service {
 	// ログタッグ
 	private final static String TAG = "WatchService";
-	// 監視状態
-	private boolean mIsWatching = false;
 
-	// ディフォルトバンダー
-	public WatchServiceBinder mBinder = new WatchServiceBinder();
+	private final static int MSG_REMOVE = 1;
+	private final static int MSG_WATCH = 2;
 
 	// 監視時間間隔
 	private int mTimeInterval = 3;
@@ -34,14 +37,12 @@ public class WatchService extends Service {
 	// アクティビティ管理器、パッケージ情報取得用
 	private ActivityManager mActivityManager;
 
-	// パッケージ名
-	private String mPackageName;
-	// 起動クラス名
-	private String mClassName;
+	// 情報読出し用
+	private SharedPreferences mSharedPrefer;
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		return mBinder;
+		return null;
 	}
 
 	@Override
@@ -52,79 +53,21 @@ public class WatchService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		mSharedPrefer = getSharedPreferences("option", Activity.MODE_PRIVATE);
 		mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 	}
 
 	@Override
 	public void onStart(Intent intent, int startId) {
+		Message msg = new Message();
+		msg.what = MSG_WATCH;
+		mWatchHandler.removeMessages(MSG_WATCH);
+		mWatchHandler.sendMessageDelayed(msg, mTimeInterval * 1000);
 	}
 
 	@Override
 	public void onDestroy() {
-		mIsWatching = false;
 		super.onDestroy();
-	}
-
-	// サービスcallback用インターフェース
-	private IWatchService mIWatchService;
-
-	// アクティビティ呼ぶ用インターフェース
-	public class WatchServiceBinder extends Binder {
-		public WatchService getService() {
-			return WatchService.this;
-		}
-
-		// callback用インターフェース指定
-		public void setInterface(IWatchService i) {
-			mIWatchService = i;
-		}
-
-		// 監視状態取得
-		public boolean getWatchingStatue() {
-			return mIsWatching;
-		}
-
-		// 監視開始
-		public void startWatch() {
-			if (!mIsWatching) {
-
-				mPackageName = mIWatchService.getTestPackageName();
-				mClassName = ProcessInfo.getClassNameByPkgName(
-						getPackageManager(), mPackageName);
-
-				// パッケージ名入力チェック
-				if (mPackageName == null || mPackageName.length() == 0) {
-					mIWatchService.updateLogText("package name is null");
-					return;
-				}
-
-				// 入力したアプリ存在チェック
-				if (mClassName == null) {
-					mIWatchService.updateLogText("package not found");
-					return;
-				}
-
-				mIsWatching = true;
-				mIWatchService.setStatusText("監視中");
-				mIWatchService.updateLogText("start watching");
-				// 監視ハンドラー送信、監視開始
-				mWatchHandler.sendEmptyMessage(0);
-			}
-		}
-
-		// 監視終了
-		public void stopWatch() {
-			if (mIsWatching) {
-				mIWatchService.setStatusText("監視中止");
-				mIWatchService.updateLogText("stop watching");
-				mIsWatching = false;
-			}
-		}
-
-		// 監視中パッケージ名取得
-		public String getPackageName() {
-			return mPackageName;
-		}
 	}
 
 	// 監視用ハンドラー
@@ -142,45 +85,55 @@ public class WatchService extends Service {
 
 		@Override
 		public void handleMessage(Message msg) {
-			if (mIsWatching) {
-				if (mPackageName == null) {
-					mPackageName = Util.PACKAGE_NAME;
-				}
+			switch (msg.what) {
+			case MSG_REMOVE:
+				android.util.Log.d(TAG, "remove msg");
+				break;
+			case MSG_WATCH:
+				String pkg_name = mSharedPrefer.getString("PACKAGE_NAME",
+						"jp.co.newphoria.signagedemo1");
+				String cls_name = ProcessInfo
+						.getClassNameByPkgName(getPackageManager(),
+								mSharedPrefer.getString("PACKAGE_NAME",
+										"jp.co.newphoria.signagedemo1"));
+				if (mSharedPrefer.getBoolean(
+						Util.DEFAULT_SHARE_KEY_IS_WATCHING, false)) {
+					// プロセスID取得
+					int pid = ProcessInfo.getPidByPName(mActivityManager,
+							pkg_name);
+					android.util.Log.d(TAG, "pid = " + pid);
+					// MOCK
+					// if(Math.random()<0.95){
+					if (pid != -1) {
+						// 監視されるアプリが働いている
+						setLogText(pkg_name + " is running");
+						// 監視時間間隔後、監視ハンドラーに再送信
+						Message m = new Message();
+						m.what = MSG_WATCH;
+						this.sendMessageDelayed(m, mTimeInterval * 1000);
+					} else {
+						// 監視されるアプリが働いてない
+						setLogText(pkg_name + " is stop");
 
-				// プロセスID取得
-				int pid = ProcessInfo.getPidByPName(mActivityManager,
-						mPackageName);
-				android.util.Log.d(TAG, "pid = " + pid);
-				// MOCK
-				// if(Math.random()<0.95){
-				if (pid != -1) {
-					// 監視されるアプリが働いている
-					mIWatchService.updateLogText("[" + Util.getTime() + "]"
-							+ mPackageName + " is running");
-					// 監視時間間隔後、監視ハンドラーに再送信
-					this.sendEmptyMessageDelayed(0, mTimeInterval * 1000);
-				} else {
-					// 監視されるアプリが働いてない
-					mIWatchService.updateLogText("[" + Util.getTime() + "]"
-							+ mPackageName + " is stop");
+						// 該当アプリ再起動
+						if (pullUpApp(pkg_name, cls_name) < 0) {
+							// 起動失敗
+							setLogText(cls_name + " start failed");
+						}
 
-					mIWatchService.updateLogText("[" + Util.getTime()
-							+ "]pull up app \n package name = " + mPackageName
-							+ "\n class name = " + mClassName);
-
-					// 該当アプリ再起動
-					if (pullUpApp(mPackageName, mClassName) < 0) {
-						mIWatchService.updateLogText(mPackageName
-								+ " start failed");
+						// 監視時間間隔後、監視ハンドラーに再送信
+						this.sendEmptyMessageDelayed(0, mTimeInterval * 1000);
 					}
-
-					// 監視時間間隔後、監視ハンドラーに再送信
-					this.sendEmptyMessageDelayed(0, mTimeInterval * 1000);
+				} else {
+					// 監視状態falseになって、監視終了
+					android.util.Log.d(TAG, "is Watching = false, stop watch");
+					setLogText("stop watch");
 				}
-			} else {
-				// 監視状態falseになって、監視終了
-				android.util.Log.d(TAG, "is Watching = false, stop watch");
+				break;
+			default:
+				break;
 			}
+
 		}
 	}
 
@@ -199,6 +152,8 @@ public class WatchService extends Service {
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
 		try {
+			setLogText("pull up app\npkgName = " + pkgName + "\nclsName = "
+					+ clsName);
 			ComponentName com_name = new ComponentName(pkgName, clsName);
 			intent.setComponent(com_name);
 
@@ -209,5 +164,12 @@ public class WatchService extends Service {
 		}
 
 		return 0;
+	}
+
+	private void setLogText(String log) {
+		Intent i = new Intent(Util.BROADCAST_ACTION_LOG);
+
+		i.putExtra("msg", log);
+		sendBroadcast(i);
 	}
 }

@@ -1,15 +1,16 @@
 package jp.co.newphoria.watchdog;
 
-import jp.co.newphoria.watchdog.service.IWatchService;
+import jp.co.newphoria.watchdog.module.ProcessInfo;
 import jp.co.newphoria.watchdog.service.WatchService;
-import jp.co.newphoria.watchdog.service.WatchService.WatchServiceBinder;
-import android.app.Service;
-import android.content.ComponentName;
+import jp.co.newphoria.watchdog.util.Util;
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,10 @@ import android.widget.TextView;
  *
  * @author Zhong Zhicong
  * @time 2015-7-17
+ * -----------------変更履歴-----------------
+ * 日付			変更者				説明
+ * 2015-7-22	Zhong Zhicong	サービス起動方式、bind→startになる。callback方式は、broadcastで実現
+ * 2015-7-22	Zhong Zhicong	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
  */
 public class Fragment01 extends Fragment {
 	// ログタッグ
@@ -47,6 +52,9 @@ public class Fragment01 extends Fragment {
 	// 監視情報更新用処理ハンドラ
 	private Handler mHandlerLogText = new Handler();
 
+	// 情報記録用
+	private SharedPreferences mSharedPrefer;
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -56,10 +64,6 @@ public class Fragment01 extends Fragment {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-
-		mIntent = new Intent(getActivity(), WatchService.class);
-		getActivity().bindService(mIntent, mServiceConnection,
-				Service.BIND_AUTO_CREATE);
 
 		mEditTextPackage = (EditText) getActivity()
 				.findViewById(R.id.edtxt_pkg);
@@ -77,90 +81,130 @@ public class Fragment01 extends Fragment {
 
 		mButtonStartWatch.setOnClickListener(mButtonStartWatchListener);
 		mButtonStopWatch.setOnClickListener(mButtonStoptWatchListener);
+
+		mSharedPrefer = getActivity().getSharedPreferences(
+				Util.DEFAULT_SHARE_NAME, Activity.MODE_PRIVATE);
+
+		boolean is_first_install = mSharedPrefer.getBoolean(
+				Util.DEFAULT_SHARE_KEY_FIRST_INSTALL, false);
+
+		// 初期登録、ディフォルト値設定
+		if (is_first_install) {
+			SharedPreferences.Editor edit = mSharedPrefer.edit();
+			edit.putString(Util.DEFAULT_SHARE_KEY_PKG_NAME, Util.PACKAGE_NAME);
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false);
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_FIRST_INSTALL, false);
+			edit.commit();
+		}
+
+		mEditTextPackage.setText(mSharedPrefer.getString(
+				Util.DEFAULT_SHARE_KEY_PKG_NAME, Util.PACKAGE_NAME));
+
+		// receiverレジスト
+		mMsgReceiver = new MsgReceiver();
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(Util.BROADCAST_ACTION_LOG);
+		getActivity().registerReceiver(mMsgReceiver, intentFilter);
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 
-		if (mWatchServiceBinder == null) {
-			return;
-		}
-
-		if (mWatchServiceBinder.getWatchingStatue()) {
+		if (mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false)) {
 			mTextStatus.setText("監視中");
-		}
-
-		if (mWatchServiceBinder.getPackageName() != null) {
-			mEditTextPackage.setText(mWatchServiceBinder.getPackageName());
+		} else {
+			mTextStatus.setText("監視停止");
 		}
 	}
 
 	@Override
+	public void onStop() {
+		super.onStop();
+	}
+
+	@Override
 	public void onDestroy() {
-		// アプリ終了時、監視サービスを解く
-		getActivity().unbindService(mServiceConnection);
+		// アクティビティ終了
+		getActivity().unregisterReceiver(mMsgReceiver);
 		super.onDestroy();
 	}
 
 	OnClickListener mButtonStartWatchListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			// パッケージ存在判定
+			String clsName = ProcessInfo
+					.getClassNameByPkgName(getActivity().getPackageManager(),
+							mEditTextPackage.getText().toString());
+
+			android.util.Log.d(TAG, "clsName = " + clsName);
+
+			if (clsName == null) {
+				mTextStatus.setText("パッケージなし、チェックし再入力してください");
+				return;
+			}
+
+			// パッケージ名、監視かどうか情報セーブ
+			SharedPreferences.Editor edit = mSharedPrefer.edit();
+			edit.putString(Util.DEFAULT_SHARE_KEY_PKG_NAME, mEditTextPackage
+					.getText().toString());
+			if (!mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING,
+					false)) {
+				// android.util.Log.d(TAG,
+				// "now is_watching = "+mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING,
+				// false));
+				edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, true);
+			}
+			edit.commit();
+
+			// android.util.Log.d(TAG,
+			// "now share pkg_name = "+mSharedPrefer.getString(Util.DEFAULT_SHARE_KEY_PKG_NAME,
+			// ""));
+			// android.util.Log.d(TAG,
+			// "now is_watching = "+mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING,
+			// false));
+
 			// 監視開始
-			mWatchServiceBinder.startWatch();
+			Intent intent = new Intent(getActivity(), WatchService.class);
+			getActivity().startService(intent);
+
+			mTextStatus.setText("監視中");
 		}
 	};
 
 	OnClickListener mButtonStoptWatchListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			// 監視無効情報セーブ
+			SharedPreferences.Editor edit = mSharedPrefer.edit();
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false);
+			edit.commit();
+
 			// 監視終了
-			mWatchServiceBinder.stopWatch();
+			Intent intent = new Intent(getActivity(), WatchService.class);
+			getActivity().stopService(intent);
+
+			mTextStatus.setText("監視停止");
 		}
 	};
 
-	// 監視サービスバンダー
-	WatchServiceBinder mWatchServiceBinder;
-	// 監視サービス
-	Service mWatchService;
-	// 監視サービス起動インテント
-	Intent mIntent;
-	// 監視サービス連結
-	private ServiceConnection mServiceConnection = new ServiceConnection() {
+	// callback用MsgReceiver
+	private MsgReceiver mMsgReceiver;
 
+	public class MsgReceiver extends BroadcastReceiver {
 		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			mWatchServiceBinder = (WatchServiceBinder) service;
-			mWatchService = mWatchServiceBinder.getService();
-			mWatchServiceBinder.setInterface(mIWatchService);
-		}
+		public void onReceive(Context context, Intent intent) {
+			// 監視情報ログ更新
+			String msg = intent.getStringExtra("msg");
 
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			mWatchService = null;
-			mWatchServiceBinder = null;
-		}
-	};
-
-	// サービスcallback用インターフェース
-	public IWatchService mIWatchService = new IWatchService() {
-		// 監視アプリパッケージネーム取得
-		@Override
-		public String getTestPackageName() {
-			return mEditTextPackage.getText().toString();
-		}
-
-		// 監視状態テキスト変更
-		@Override
-		public void setStatusText(String s) {
-			mTextStatus.setText(s);
-		}
-
-		// 監視情報テキスト変更（結末追加）
-		@Override
-		public void updateLogText(String log) {
-			mTextLog.append("\n" + log);
-			android.util.Log.d(TAG, log);
+			mTextLog.append("\n" + msg);
+			android.util.Log.d(TAG, msg);
 			mHandlerLogText.post(new Runnable() {
 				@Override
 				public void run() {
@@ -168,5 +212,5 @@ public class Fragment01 extends Fragment {
 				}
 			});
 		}
-	};
+	}
 }

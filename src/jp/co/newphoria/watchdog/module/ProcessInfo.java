@@ -14,6 +14,9 @@ import android.content.pm.ResolveInfo;
  *
  * @author Zhong Zhicong
  * @time 2015-7-17
+ * -----------------変更履歴-----------------
+ * 日付			変更者				説明
+ * 2015-7-22	Zhong Zhicong	起動クラス名検察結果ないのログ追加
  */
 public class ProcessInfo {
 	private final static String TAG = "PackageInfo";
@@ -84,6 +87,7 @@ public class ProcessInfo {
 		try {
 			packageinfo = pkgManager.getPackageInfo(pkgName, 0);
 		} catch (NameNotFoundException e) {
+			android.util.Log.d(TAG, "Name Not Found");
 			e.printStackTrace();
 		}
 
