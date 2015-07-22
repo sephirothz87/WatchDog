@@ -122,7 +122,9 @@ public class WatchService extends Service {
 						}
 
 						// 監視時間間隔後、監視ハンドラーに再送信
-						this.sendEmptyMessageDelayed(0, mTimeInterval * 1000);
+						Message m = new Message();
+						m.what = MSG_WATCH;
+						this.sendMessageDelayed(m, mTimeInterval * 1000);
 					}
 				} else {
 					// 監視状態falseになって、監視終了
