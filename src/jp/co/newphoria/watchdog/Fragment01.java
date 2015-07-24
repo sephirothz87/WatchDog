@@ -12,11 +12,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -26,10 +30,13 @@ import android.widget.TextView;
  *
  * @author Zhong Zhicong
  * @time 2015-7-17
- * -----------------変更履歴-----------------
- * 日付			変更者				説明
- * 2015-7-22	Zhong Zhicong	サービス起動方式、bind→startになる。callback方式は、broadcastで実現
+ * ---------------------------------変更履歴---------------------------------
+ * 日付 			変更者 			説明 
+ * 2015-7-22 	Zhong Zhicong	サービス起動方式、bind→startになる。callback方式は、broadcastで実現 
  * 2015-7-22	Zhong Zhicong	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
+ * 2015-7-24	Zhong Zhicong	OS起動する時自動的に監視かどうか設定機能追加
+ * 2015-7-24	Zhong Zhicong	Callback用BroadcastReceiverはLocalBroadcastManager利用になる
+ * 
  */
 public class Fragment01 extends Fragment {
 	// ログタッグ
@@ -37,6 +44,8 @@ public class Fragment01 extends Fragment {
 
 	// 監視したいパッケージ入力枠
 	private EditText mEditTextPackage;
+
+	private CheckBox mCheckBoxIsBootStart;
 	// 監視状態表示テキスト
 	private TextView mTextStatus;
 	// 監視情報表示テキスト
@@ -55,6 +64,11 @@ public class Fragment01 extends Fragment {
 	// 情報記録用
 	private SharedPreferences mSharedPrefer;
 
+	// BroadCastレジースト用マネジャー
+	private LocalBroadcastManager mLocalBroadcastManager;
+	// callback用MsgReceiver
+	private MsgReceiver mMsgReceiver;
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -67,6 +81,11 @@ public class Fragment01 extends Fragment {
 
 		mEditTextPackage = (EditText) getActivity()
 				.findViewById(R.id.edtxt_pkg);
+
+		mCheckBoxIsBootStart = (CheckBox) getActivity().findViewById(
+				R.id.check_box_boot_start);
+		mCheckBoxIsBootStart
+				.setOnCheckedChangeListener(mCheckBoxIsBootStartListener);
 
 		mTextStatus = (TextView) getActivity().findViewById(R.id.text);
 		mTextLog = (TextView) getActivity().findViewById(R.id.log);
@@ -94,17 +113,19 @@ public class Fragment01 extends Fragment {
 			edit.putString(Util.DEFAULT_SHARE_KEY_PKG_NAME, Util.PACKAGE_NAME);
 			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false);
 			edit.putBoolean(Util.DEFAULT_SHARE_KEY_FIRST_INSTALL, false);
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_BOOT_START, false);
 			edit.commit();
 		}
 
 		mEditTextPackage.setText(mSharedPrefer.getString(
 				Util.DEFAULT_SHARE_KEY_PKG_NAME, Util.PACKAGE_NAME));
 
-		// receiverレジスト
-		mMsgReceiver = new MsgReceiver();
-		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction(Util.BROADCAST_ACTION_LOG);
-		getActivity().registerReceiver(mMsgReceiver, intentFilter);
+		if (mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_BOOT_START,
+				false)) {
+			mCheckBoxIsBootStart.setChecked(true);
+		} else {
+			mCheckBoxIsBootStart.setChecked(false);
+		}
 	}
 
 	@Override
@@ -116,11 +137,25 @@ public class Fragment01 extends Fragment {
 	public void onResume() {
 		super.onResume();
 
+		// receiverレジスト
+		mLocalBroadcastManager = LocalBroadcastManager
+				.getInstance(getActivity());
+		mMsgReceiver = new MsgReceiver();
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(Util.BROADCAST_ACTION_LOG);
+		mLocalBroadcastManager.registerReceiver(mMsgReceiver, intentFilter);
+
 		if (mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false)) {
 			mTextStatus.setText("監視中");
 		} else {
 			mTextStatus.setText("監視停止");
 		}
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		mLocalBroadcastManager.unregisterReceiver(mMsgReceiver);
 	}
 
 	@Override
@@ -131,7 +166,6 @@ public class Fragment01 extends Fragment {
 	@Override
 	public void onDestroy() {
 		// アクティビティ終了
-		getActivity().unregisterReceiver(mMsgReceiver);
 		super.onDestroy();
 	}
 
@@ -154,13 +188,7 @@ public class Fragment01 extends Fragment {
 			SharedPreferences.Editor edit = mSharedPrefer.edit();
 			edit.putString(Util.DEFAULT_SHARE_KEY_PKG_NAME, mEditTextPackage
 					.getText().toString());
-			if (!mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING,
-					false)) {
-				// android.util.Log.d(TAG,
-				// "now is_watching = "+mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING,
-				// false));
-				edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, true);
-			}
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, true);
 			edit.commit();
 
 			// android.util.Log.d(TAG,
@@ -194,9 +222,16 @@ public class Fragment01 extends Fragment {
 		}
 	};
 
-	// callback用MsgReceiver
-	private MsgReceiver mMsgReceiver;
+	private OnCheckedChangeListener mCheckBoxIsBootStartListener = new OnCheckedChangeListener() {
+		@Override
+		public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
+			SharedPreferences.Editor edit = mSharedPrefer.edit();
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_BOOT_START, arg1);
+			edit.commit();
+		}
+	};
 
+	// callback用MsgReceiver
 	public class MsgReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -204,7 +239,6 @@ public class Fragment01 extends Fragment {
 			String msg = intent.getStringExtra("msg");
 
 			mTextLog.append("\n" + msg);
-			android.util.Log.d(TAG, msg);
 			mHandlerLogText.post(new Runnable() {
 				@Override
 				public void run() {

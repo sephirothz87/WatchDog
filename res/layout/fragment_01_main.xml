@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/txt_input_please" />
-    
+
     <EditText
         android:id="@+id/edtxt_pkg"
         android:layout_width="match_parent"
@@ -22,9 +22,16 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:gravity="center"
-        android:singleLine="true"
         android:inputType="text"
-        android:text="@string/edtxt_pkg_name"/>
+        android:singleLine="true"
+        android:text="@string/edtxt_pkg_name" />
+
+    <CheckBox
+        android:id="@+id/check_box_boot_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/check_box_boot_start" />
 
     <TextView
         android:id="@+id/text"

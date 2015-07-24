@@ -1,5 +1,11 @@
 package jp.co.newphoria.watchdog.util;
 
+import android.annotation.SuppressLint;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -8,9 +14,10 @@ import java.util.Date;
  *
  * @author Zhong Zhicong
  * @time 2015-7-17
- * -----------------変更履歴-----------------
- * 日付			変更者				説明
- * 2015-7-22	Zhong Zhicong	Broadcastアクション名、SharedPreferences相関定数追加
+ * ---------------------------------変更履歴---------------------------------
+ * 日付 			変更者 			説明 
+ * 2015-7-22	Zhong Zhicong 	Broadcastアクション名、SharedPreferences相関定数追加
+ * 2015-7-24	Zhong Zhicong 	OS起動する時自動的に監視かどうかSharedPreferencesケー追加
  */
 public class Util {
 	// 共通ログタッグ
@@ -27,6 +34,8 @@ public class Util {
 	public static final String DEFAULT_SHARE_KEY_PKG_NAME = "PACKAGE_NAME";
 	// SharedPreferencesキー、監視かどうか
 	public static final String DEFAULT_SHARE_KEY_IS_WATCHING = "IS_WATCHING";
+	// SharedPreferencesキー、OS起動時に自動てきに監視するかどうか
+	public static final String DEFAULT_SHARE_KEY_IS_BOOT_START = "IS_BOOT_START";
 
 	// ディフォルトパッケージ名
 	public static final String PACKAGE_NAME = "jp.co.newphoria.signagedemo1";
@@ -39,5 +48,53 @@ public class Util {
 	// 現在の時間取得、ログ表示用
 	public static String getTime() {
 		return DATE_FORMAT.format(new Date());
+	}
+
+	// 　DEBUGフラッグ
+	private static final boolean DEBUG = false;
+
+	// DEBUG用、ローカルファイルにログ記入
+	@SuppressLint("SdCardPath")
+	public static void writeLog(String s) {
+		if (DEBUG) {
+			String path = "/mnt/sdcard/watchdog/log.txt";
+			createNewFile(path);
+			writeLine(path, "[" + Util.getTime() + "]" + s);
+		}
+	}
+
+	public static File createNewFile(String filePath) {
+		File f = new File(filePath);
+		if (!f.exists()) {
+			f.getParentFile().mkdirs();
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			}
+			return f;
+		}
+		return null;
+	}
+
+	public static boolean writeLine(String filePath, String str) {
+		return writeLine(filePath, str, "utf-8");
+	}
+
+	public static boolean writeLine(String filePath, String str, String encode) {
+		try {
+			FileOutputStream fos = new FileOutputStream(filePath, true);
+			String s = str + System.getProperty("line.separator");
+			fos.write(s.getBytes(encode));
+			fos.close();
+			return true;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 }

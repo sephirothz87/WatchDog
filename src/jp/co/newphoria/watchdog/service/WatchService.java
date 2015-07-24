@@ -13,16 +13,18 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * 監視サービス
  *
  * @author Zhong Zhicong
  * @time 2015-7-17
- * -----------------変更履歴-----------------
- * 日付			変更者				説明
- * 2015-7-22	Zhong Zhicong	サービス起動方式、bind→startになる。callback方式は、broadcastで実現
- * 2015-7-22	Zhong Zhicong	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
+ * ---------------------------------変更履歴---------------------------------
+ * 日付 			変更者 			説明 
+ * 2015-7-22	Zhong Zhicong 	サービス起動方式、bind→startになる。callback方式は、broadcastで実現 
+ * 2015-7-22	Zhong Zhicong 	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
+ * 2015-7-24	Zhong Zhicong 	Callback用BroadcastReceiverはLocalBroadcastManager利用になる
  */
 public class WatchService extends Service {
 	// ログタッグ
@@ -40,6 +42,9 @@ public class WatchService extends Service {
 	// 情報読出し用
 	private SharedPreferences mSharedPrefer;
 
+	// BroadCastレジースト用マネジャー
+	LocalBroadcastManager mLocalBroadcastManager;
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -55,14 +60,18 @@ public class WatchService extends Service {
 		super.onCreate();
 		mSharedPrefer = getSharedPreferences("option", Activity.MODE_PRIVATE);
 		mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
 	}
 
 	@Override
-	public void onStart(Intent intent, int startId) {
+	public int onStartCommand(Intent intent, int flags, int startId) {
 		Message msg = new Message();
 		msg.what = MSG_WATCH;
 		mWatchHandler.removeMessages(MSG_WATCH);
 		mWatchHandler.sendMessageDelayed(msg, mTimeInterval * 1000);
+
+		// Util.writeLog("service start command");
+		return START_STICKY;
 	}
 
 	@Override
@@ -102,11 +111,14 @@ public class WatchService extends Service {
 					int pid = ProcessInfo.getPidByPName(mActivityManager,
 							pkg_name);
 					android.util.Log.d(TAG, "pid = " + pid);
+					// Util.writeLog("pid = " + pid);
 					// MOCK
 					// if(Math.random()<0.95){
 					if (pid != -1) {
 						// 監視されるアプリが働いている
 						setLogText(pkg_name + " is running");
+						android.util.Log.d(TAG, pkg_name + " is running");
+						// Util.writeLog(pkg_name + " is running");
 						// 監視時間間隔後、監視ハンドラーに再送信
 						Message m = new Message();
 						m.what = MSG_WATCH;
@@ -114,11 +126,15 @@ public class WatchService extends Service {
 					} else {
 						// 監視されるアプリが働いてない
 						setLogText(pkg_name + " is stop");
+						android.util.Log.d(TAG, pkg_name + " is stop");
+						// Util.writeLog(pkg_name + " is stop");
 
 						// 該当アプリ再起動
 						if (pullUpApp(pkg_name, cls_name) < 0) {
 							// 起動失敗
 							setLogText(cls_name + " start failed");
+							android.util.Log.d(TAG, cls_name + " start failed");
+							// Util.writeLog(cls_name + " start failed");
 						}
 
 						// 監視時間間隔後、監視ハンドラーに再送信
@@ -128,8 +144,9 @@ public class WatchService extends Service {
 					}
 				} else {
 					// 監視状態falseになって、監視終了
-					android.util.Log.d(TAG, "is Watching = false, stop watch");
 					setLogText("stop watch");
+					android.util.Log.d(TAG, "is Watching = false, stop watch");
+					// Util.writeLog("is Watching = false, stop watch");
 				}
 				break;
 			default:
@@ -156,12 +173,19 @@ public class WatchService extends Service {
 		try {
 			setLogText("pull up app\npkgName = " + pkgName + "\nclsName = "
 					+ clsName);
+			android.util.Log.d(TAG, "pull up app\npkgName = " + pkgName
+					+ "\nclsName = " + clsName);
+			// Util.writeLog("pull up app\npkgName = " + pkgName +
+			// "\nclsName = "
+			// + clsName);
 			ComponentName com_name = new ComponentName(pkgName, clsName);
 			intent.setComponent(com_name);
 
 			getApplication().startActivity(intent);
 		} catch (Exception e) {
+			setLogText("pullUpApp fail");
 			android.util.Log.d(TAG, "pullUpApp fail");
+			// Util.writeLog("pullUpApp fail");
 			return -1;
 		}
 
@@ -170,8 +194,8 @@ public class WatchService extends Service {
 
 	private void setLogText(String log) {
 		Intent i = new Intent(Util.BROADCAST_ACTION_LOG);
-
 		i.putExtra("msg", log);
-		sendBroadcast(i);
+
+		mLocalBroadcastManager.sendBroadcast(i);
 	}
 }
