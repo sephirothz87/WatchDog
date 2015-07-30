@@ -36,7 +36,6 @@ import android.widget.TextView;
  * 2015-7-22	Zhong Zhicong	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
  * 2015-7-24	Zhong Zhicong	OS起動する時自動的に監視かどうか設定機能追加
  * 2015-7-24	Zhong Zhicong	Callback用BroadcastReceiverはLocalBroadcastManager利用になる
- * 
  */
 public class Fragment01 extends Fragment {
 	// ログタッグ

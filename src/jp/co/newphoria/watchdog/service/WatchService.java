@@ -64,11 +64,12 @@ public class WatchService extends Service {
 	public boolean onUnbind(Intent intent) {
 		return super.onUnbind(intent);
 	}
-	
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		mSharedPrefer = getSharedPreferences(Util.DEFAULT_SHARE_NAME, Activity.MODE_PRIVATE);
+		mSharedPrefer = getSharedPreferences(Util.DEFAULT_SHARE_NAME,
+				Activity.MODE_PRIVATE);
 		mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
 	}
@@ -109,10 +110,10 @@ public class WatchService extends Service {
 				android.util.Log.d(TAG, "remove msg");
 				break;
 			case MSG_WATCH:
-				String pkg_name = mSharedPrefer.getString(Util.DEFAULT_SHARE_KEY_PKG_NAME,
-						Util.PACKAGE_NAME);
-				String cls_name = ProcessInfo
-						.getClassNameByPkgName(getPackageManager(),pkg_name);
+				String pkg_name = mSharedPrefer.getString(
+						Util.DEFAULT_SHARE_KEY_PKG_NAME, Util.PACKAGE_NAME);
+				String cls_name = ProcessInfo.getClassNameByPkgName(
+						getPackageManager(), pkg_name);
 
 				// スクリーン状態取得
 				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -159,8 +160,7 @@ public class WatchService extends Service {
 									.getRunningTasks(10);
 							RunningTaskInfo rinfo = runningTasks.get(0);
 							ComponentName component = rinfo.topActivity;
-							android.util.Log.d(
-									TAG,
+							android.util.Log.d(TAG,
 									"watchdog topActivity classname = "
 											+ component.getClassName());
 
