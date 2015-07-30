@@ -42,6 +42,13 @@ public class Fragment01 extends Fragment {
 	// ログタッグ
 	private final static String TAG = "Fragment01";
 
+	// 監視開始ステータステキスト
+	private final String TXT_START_WATCHING = "監視中";
+	// 監視終了ステータステキスト
+	private final String TXT_STOP_WATCHING = "監視停止";
+	// パッケージ名チェックステータステキスト
+	private final String TXT_PKGNAME_CHECK = "パッケージなし、チェックし再入力してください";
+
 	// 監視したいパッケージ入力枠
 	private EditText mEditTextPackage;
 
@@ -146,9 +153,13 @@ public class Fragment01 extends Fragment {
 		mLocalBroadcastManager.registerReceiver(mMsgReceiver, intentFilter);
 
 		if (mSharedPrefer.getBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false)) {
-			mTextStatus.setText("監視中");
+			mTextStatus.setText(TXT_START_WATCHING);
+
+			// 監視開始
+			Intent intent = new Intent(getActivity(), WatchService.class);
+			getActivity().startService(intent);
 		} else {
-			mTextStatus.setText("監視停止");
+			mTextStatus.setText(TXT_STOP_WATCHING);
 		}
 	}
 
@@ -180,7 +191,7 @@ public class Fragment01 extends Fragment {
 			android.util.Log.d(TAG, "clsName = " + clsName);
 
 			if (clsName == null) {
-				mTextStatus.setText("パッケージなし、チェックし再入力してください");
+				mTextStatus.setText(TXT_PKGNAME_CHECK);
 				return;
 			}
 
@@ -202,7 +213,7 @@ public class Fragment01 extends Fragment {
 			Intent intent = new Intent(getActivity(), WatchService.class);
 			getActivity().startService(intent);
 
-			mTextStatus.setText("監視中");
+			mTextStatus.setText(TXT_START_WATCHING);
 		}
 	};
 
@@ -218,7 +229,7 @@ public class Fragment01 extends Fragment {
 			Intent intent = new Intent(getActivity(), WatchService.class);
 			getActivity().stopService(intent);
 
-			mTextStatus.setText("監視停止");
+			mTextStatus.setText(TXT_STOP_WATCHING);
 		}
 	};
 
@@ -236,8 +247,9 @@ public class Fragment01 extends Fragment {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// 監視情報ログ更新
-			String msg = intent.getStringExtra("msg");
+			String msg = intent.getStringExtra(Util.MSG_UPDATE_LOG);
 
+			mTextLog.append("\n----------------------------------------");
 			mTextLog.append("\n" + msg);
 			mHandlerLogText.post(new Runnable() {
 				@Override

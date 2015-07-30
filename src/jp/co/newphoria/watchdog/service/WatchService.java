@@ -1,9 +1,15 @@
 package jp.co.newphoria.watchdog.service;
 
+import java.util.List;
+
 import jp.co.newphoria.watchdog.module.ProcessInfo;
 import jp.co.newphoria.watchdog.util.Util;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.ActivityManager.RunningTaskInfo;
+import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,6 +19,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.PowerManager;
 import android.support.v4.content.LocalBroadcastManager;
 
 /**
@@ -25,7 +32,10 @@ import android.support.v4.content.LocalBroadcastManager;
  * 2015-7-22	Zhong Zhicong 	サービス起動方式、bind→startになる。callback方式は、broadcastで実現 
  * 2015-7-22	Zhong Zhicong 	監視対象パッケージ名、監視かどうか情報をSharedPreferencedに保存
  * 2015-7-24	Zhong Zhicong 	Callback用BroadcastReceiverはLocalBroadcastManager利用になる
+ * 2015-7-30	Zhong Zhicong 	機能追加：監視対象アプリ最前ではない時、アプリをプールアップ。例外：WatchDog本体の制御機能利用のため、WatchDogアプリが最前時、監視対象アプリをプールアップしない
+ * 2015-7-30	Zhong Zhicong 	スクリーン閉める/ロック状態を監視し、該当時にスクリーンをライトアップ/アンロックする
  */
+@SuppressWarnings("deprecation")
 public class WatchService extends Service {
 	// ログタッグ
 	private final static String TAG = "WatchService";
@@ -54,11 +64,11 @@ public class WatchService extends Service {
 	public boolean onUnbind(Intent intent) {
 		return super.onUnbind(intent);
 	}
-
+	
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		mSharedPrefer = getSharedPreferences("option", Activity.MODE_PRIVATE);
+		mSharedPrefer = getSharedPreferences(Util.DEFAULT_SHARE_NAME, Activity.MODE_PRIVATE);
 		mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
 	}
@@ -99,30 +109,86 @@ public class WatchService extends Service {
 				android.util.Log.d(TAG, "remove msg");
 				break;
 			case MSG_WATCH:
-				String pkg_name = mSharedPrefer.getString("PACKAGE_NAME",
-						"jp.co.newphoria.signagedemo1");
+				String pkg_name = mSharedPrefer.getString(Util.DEFAULT_SHARE_KEY_PKG_NAME,
+						Util.PACKAGE_NAME);
 				String cls_name = ProcessInfo
-						.getClassNameByPkgName(getPackageManager(),
-								mSharedPrefer.getString("PACKAGE_NAME",
-										"jp.co.newphoria.signagedemo1"));
+						.getClassNameByPkgName(getPackageManager(),pkg_name);
+
+				// スクリーン状態取得
+				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+				boolean isScreenOn = pm.isScreenOn();
+				android.util.Log.d(TAG, "isScreenOn = " + isScreenOn);
+
+				KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+				boolean inputMode = km.inKeyguardRestrictedInputMode();
+				android.util.Log.d(TAG, "inputMode = " + inputMode);
+
+				// スクリーンライトアップ
+				if (!isScreenOn) {
+					android.util.Log.d(TAG, "light up screen");
+					PowerManager.WakeLock wl = pm.newWakeLock(
+							PowerManager.ACQUIRE_CAUSES_WAKEUP
+									| PowerManager.SCREEN_DIM_WAKE_LOCK,
+							"LightUp");
+					wl.acquire();
+					wl.release();
+				}
+
+				// スクリーンアンロック
+				KeyguardLock kl = km.newKeyguardLock("Locker");
+				android.util.Log.d(TAG, "unlock screen");
+				kl.disableKeyguard();
+
 				if (mSharedPrefer.getBoolean(
 						Util.DEFAULT_SHARE_KEY_IS_WATCHING, false)) {
-					// プロセスID取得
-					int pid = ProcessInfo.getPidByPName(mActivityManager,
-							pkg_name);
-					android.util.Log.d(TAG, "pid = " + pid);
-					// Util.writeLog("pid = " + pid);
+					// RunningAppProcessInfo対象取得
+					RunningAppProcessInfo rainfo = ProcessInfo
+							.getProcessInfoByPName(mActivityManager, pkg_name);
+
 					// MOCK
 					// if(Math.random()<0.95){
-					if (pid != -1) {
+					if (rainfo != null) {
 						// 監視されるアプリが働いている
 						setLogText(pkg_name + " is running");
 						android.util.Log.d(TAG, pkg_name + " is running");
 						// Util.writeLog(pkg_name + " is running");
-						// 監視時間間隔後、監視ハンドラーに再送信
-						Message m = new Message();
-						m.what = MSG_WATCH;
-						this.sendMessageDelayed(m, mTimeInterval * 1000);
+
+						if (!ProcessInfo.isTopProcess(mActivityManager, rainfo)) {
+							// 監視対象アプリは最前ではない、WatchDog最前Activity取得
+							List<RunningTaskInfo> runningTasks = mActivityManager
+									.getRunningTasks(10);
+							RunningTaskInfo rinfo = runningTasks.get(0);
+							ComponentName component = rinfo.topActivity;
+							android.util.Log.d(
+									TAG,
+									"watchdog topActivity classname = "
+											+ component.getClassName());
+
+							if (!component.getClassName().equals(
+									Util.CLASS_NAME)) {
+								// WatchDogは最前ではない、監視対象アプリをプールアップ
+								android.util.Log.d(TAG, pkg_name
+										+ " is running background");
+								// 該当アプリ再起動
+								if (pullUpApp(pkg_name, cls_name) < 0) {
+									// 起動失敗
+									setLogText(cls_name + " start failed");
+									android.util.Log.d(TAG, cls_name
+											+ " start failed");
+									// Util.writeLog(cls_name +
+									// " start failed");
+								}
+							} else {
+								// WatchDogは最前で、監視対象アプリをプールアップしない
+								android.util.Log
+										.d(TAG,
+												pkg_name
+														+ " is running background, watchdog is running in front.");
+							}
+						} else {
+							android.util.Log.d(TAG, pkg_name
+									+ " is running in front");
+						}
 					} else {
 						// 監視されるアプリが働いてない
 						setLogText(pkg_name + " is stop");
@@ -137,11 +203,12 @@ public class WatchService extends Service {
 							// Util.writeLog(cls_name + " start failed");
 						}
 
-						// 監視時間間隔後、監視ハンドラーに再送信
-						Message m = new Message();
-						m.what = MSG_WATCH;
-						this.sendMessageDelayed(m, mTimeInterval * 1000);
 					}
+
+					// 監視時間間隔後、監視ハンドラーに再送信
+					Message m = new Message();
+					m.what = MSG_WATCH;
+					this.sendMessageDelayed(m, mTimeInterval * 1000);
 				} else {
 					// 監視状態falseになって、監視終了
 					setLogText("stop watch");
@@ -194,7 +261,7 @@ public class WatchService extends Service {
 
 	private void setLogText(String log) {
 		Intent i = new Intent(Util.BROADCAST_ACTION_LOG);
-		i.putExtra("msg", log);
+		i.putExtra(Util.MSG_UPDATE_LOG, log);
 
 		mLocalBroadcastManager.sendBroadcast(i);
 	}

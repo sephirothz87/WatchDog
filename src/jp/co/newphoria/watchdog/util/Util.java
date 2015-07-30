@@ -45,6 +45,9 @@ public class Util {
 	public final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd HH:mm:ss");
 
+	// 監視ログ更新用IntentExtra名
+	public final static String MSG_UPDATE_LOG = "updateLog";
+
 	// 現在の時間取得、ログ表示用
 	public static String getTime() {
 		return DATE_FORMAT.format(new Date());
