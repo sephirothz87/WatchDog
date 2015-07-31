@@ -41,6 +41,8 @@ public class Util {
 	public static final String PACKAGE_NAME = "jp.co.newphoria.signagedemo1";
 	// ディフォルト起動クラス名
 	public static final String CLASS_NAME = "jp.co.newphoria.signagedemo1.MainActivity";
+	// WatchDog起動クラス名
+	public static final String WATCH_DOG_LANCHER_NAME = "jp.co.newphoria.watchdog.MainActivity";
 	// 時間フォーマット
 	public final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd HH:mm:ss");

@@ -165,7 +165,7 @@ public class WatchService extends Service {
 											+ component.getClassName());
 
 							if (!component.getClassName().equals(
-									Util.CLASS_NAME)) {
+									Util.WATCH_DOG_LANCHER_NAME)) {
 								// WatchDogは最前ではない、監視対象アプリをプールアップ
 								android.util.Log.d(TAG, pkg_name
 										+ " is running background");
