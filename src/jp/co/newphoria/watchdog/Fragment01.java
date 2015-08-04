@@ -363,7 +363,7 @@ public class Fragment01 extends Fragment {
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);
 		intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
 		ComponentName com_name = new ComponentName(Util.WATCH_DOG_PACKAGE_NAME,
-				Util.WATCH_DOG_LANCHER_NAME);
+				Util.WATCH_DOG_LAUNCHER_NAME);
 		intent.setComponent(com_name);
 		PendingIntent p_intent = PendingIntent.getActivity(getActivity()
 				.getApplicationContext(), 0, intent,

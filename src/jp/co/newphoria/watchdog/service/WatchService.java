@@ -188,7 +188,7 @@ public class WatchService extends Service {
 							// + component.getClassName());
 							//
 							// if (!component.getClassName().equals(
-							// Util.WATCH_DOG_LANCHER_NAME)) {
+							// Util.WATCH_DOG_LAUNCHER_NAME)) {
 							// // WatchDogは最前ではない、監視対象アプリをプールアップ
 							// android.util.Log.d(TAG, pkg_name
 							// + " is running background");
@@ -340,7 +340,7 @@ public class WatchService extends Service {
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);
 		intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
 		ComponentName com_name = new ComponentName(Util.WATCH_DOG_PACKAGE_NAME,
-				Util.WATCH_DOG_LANCHER_NAME);
+				Util.WATCH_DOG_LAUNCHER_NAME);
 		intent.setComponent(com_name);
 		PendingIntent p_intent = PendingIntent.getActivity(
 				getApplicationContext(), 0, intent,
