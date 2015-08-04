@@ -57,7 +57,7 @@ public class Util {
 	// 監視終了ステータステキスト
 	public static final String TXT_STOP_WATCHING = "監視停止";
 	// 通知タイトルテキスト
-	public static final String TXT_NOTIFICATION_TITLE = "WatchDog運行中";
+	public static final String TXT_NOTIFICATION_TITLE = "WatchDog";
 
 	// 時間フォーマット
 	public final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
