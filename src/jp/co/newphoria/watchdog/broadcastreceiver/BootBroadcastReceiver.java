@@ -21,24 +21,24 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		android.util.Log.d(TAG, "onReceive");
-		Util.writeLog("onReceive");
+//		Util.writeLog("onReceive");
 
-		SharedPreferences share_pref = context.getSharedPreferences("option",
+		SharedPreferences share_pref = context.getSharedPreferences(Util.DEFAULT_SHARE_NAME,
 				Activity.MODE_PRIVATE);
 		SharedPreferences.Editor edit = share_pref.edit();
-		if (share_pref.getBoolean("IS_BOOT_START", false)) {
+		if (share_pref.getBoolean(Util.DEFAULT_SHARE_KEY_IS_BOOT_START, false)) {
 			android.util.Log.d(TAG, "boot start");
-			Util.writeLog("boot start");
+//			Util.writeLog("boot start");
 			// 監視かどうか情報セーブ
-			edit.putBoolean("IS_WATCHING", true);
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, true);
 			edit.commit();
 			Intent i = new Intent(context, WatchService.class);
 			context.startService(i);
 		} else {
 			android.util.Log.d(TAG, "no need boot start");
-			Util.writeLog("no need boot start");
+//			Util.writeLog("no need boot start");
 			// 監視無効情報セーブ
-			edit.putBoolean("IS_WATCHING", false);
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false);
 			edit.commit();
 		}
 	}
