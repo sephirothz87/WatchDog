@@ -18,6 +18,8 @@ import java.util.Date;
  * 日付 			変更者 			説明 
  * 2015-7-22	Zhong Zhicong 	Broadcastアクション名、SharedPreferences相関定数追加
  * 2015-7-24	Zhong Zhicong 	OS起動する時自動的に監視かどうかSharedPreferencesケー追加
+ * 2015-8-04	Zhong Zhicong	通知表示有効/無効設定機能追加
+ * 2015-8-04	Zhong Zhicong	自動的にロック有効/無効設定機能追加
  */
 public class Util {
 	// 共通ログタッグ
@@ -36,13 +38,27 @@ public class Util {
 	public static final String DEFAULT_SHARE_KEY_IS_WATCHING = "IS_WATCHING";
 	// SharedPreferencesキー、OS起動時に自動てきに監視するかどうか
 	public static final String DEFAULT_SHARE_KEY_IS_BOOT_START = "IS_BOOT_START";
+	// SharedPreferencesキー、自動アンロックかどうか
+	public static final String DEFAULT_SHARE_KEY_IS_AUTO_UNLOCK = "IS_AUTO_UNLOCK";
+	// SharedPreferencesキー、通知表示かどうか
+	public static final String DEFAULT_SHARE_KEY_IS_NOTICE_ENABLE = "IS_NOTICE_ENABLE";
 
 	// ディフォルトパッケージ名
 	public static final String PACKAGE_NAME = "jp.co.newphoria.signagedemo1";
 	// ディフォルト起動クラス名
 	public static final String CLASS_NAME = "jp.co.newphoria.signagedemo1.MainActivity";
+	// WatchDogパッケージ名
+	public static final String WATCH_DOG_PACKAGE_NAME = "jp.co.newphoria.watchdog";
 	// WatchDog起動クラス名
 	public static final String WATCH_DOG_LANCHER_NAME = "jp.co.newphoria.watchdog.MainActivity";
+
+	// 監視開始ステータステキスト
+	public static final String TXT_START_WATCHING = "監視中";
+	// 監視終了ステータステキスト
+	public static final String TXT_STOP_WATCHING = "監視停止";
+	// 通知タイトルテキスト
+	public static final String TXT_NOTIFICATION_TITLE = "WatchDog運行中";
+
 	// 時間フォーマット
 	public final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd HH:mm:ss");
