@@ -38,6 +38,7 @@ import android.support.v4.content.LocalBroadcastManager;
  * 2015-8-04	Zhong Zhicong	通知表示機能追加
  * 2015-8-04	Zhong Zhicong	自動的にロック有効/無効設定機能追加
  * 2015-8-04	Zhong Zhicong	WatchDogアプリが最前判定方式変更
+ * 2015-8-04	Zhong Zhicong	WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能追加
  */
 @SuppressWarnings("deprecation")
 public class WatchService extends Service {
@@ -247,6 +248,32 @@ public class WatchService extends Service {
 						setLogText(pkg_name + " is stop");
 						android.util.Log.d(TAG, pkg_name + " is stop");
 						// Util.writeLog(pkg_name + " is stop");
+
+						// WatchDogアプリフォアグラウンド状態で、バックグラウンドに遷移
+						RunningAppProcessInfo rainfo_watchdog = ProcessInfo
+								.getProcessInfoByPName(mActivityManager,
+										Util.WATCH_DOG_PACKAGE_NAME);
+						if (rainfo_watchdog != null) {
+							if (ProcessInfo.isTopProcess(mActivityManager,
+									rainfo_watchdog)) {
+								android.util.Log
+										.d(TAG,
+												"watchdog is running in front. remove background(home).");
+
+								// バックグラウンドに遷移（Homeキークリック動作同じ）
+								Intent intent = new Intent(Intent.ACTION_MAIN);
+								intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+								intent.addCategory(Intent.CATEGORY_HOME);
+								startActivity(intent);
+
+								// 遷移動作と該当アプリ再起動動作が速いから、1秒の遅れ追加
+								try {
+									Thread.sleep(1000);
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
+						}
 
 						// 該当アプリ再起動
 						if (pullUpApp(pkg_name, cls_name) < 0) {
