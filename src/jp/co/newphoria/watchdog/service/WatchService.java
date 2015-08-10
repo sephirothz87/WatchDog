@@ -39,6 +39,7 @@ import android.support.v4.content.LocalBroadcastManager;
  * 2015-8-04	Zhong Zhicong	自動的にロック有効/無効設定機能追加
  * 2015-8-04	Zhong Zhicong	WatchDogアプリが最前判定方式変更
  * 2015-8-04	Zhong Zhicong	WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能追加
+ * 2015-8-04	Zhong Zhicong	機能変更：WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能
  */
 @SuppressWarnings("deprecation")
 public class WatchService extends Service {
@@ -254,33 +255,24 @@ public class WatchService extends Service {
 								.getProcessInfoByPName(mActivityManager,
 										Util.WATCH_DOG_PACKAGE_NAME);
 						if (rainfo_watchdog != null) {
-							if (ProcessInfo.isTopProcess(mActivityManager,
+							if (!ProcessInfo.isTopProcess(mActivityManager,
 									rainfo_watchdog)) {
+								// 該当アプリ再起動
+								if (pullUpApp(pkg_name, cls_name) < 0) {
+									// 起動失敗
+									setLogText(cls_name + " start failed");
+									android.util.Log.d(TAG, cls_name
+											+ " start failed");
+									// Util.writeLog(cls_name +
+									// " start failed");
+								}
+							} else {
+								// Watchdogがフォアグラウンド時、何もしない
+								setLogText("watchdog is running in front. wait for background. watching app will be started");
 								android.util.Log
 										.d(TAG,
-												"watchdog is running in front. remove background(home).");
-
-								// バックグラウンドに遷移（Homeキークリック動作同じ）
-								Intent intent = new Intent(Intent.ACTION_MAIN);
-								intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-								intent.addCategory(Intent.CATEGORY_HOME);
-								startActivity(intent);
-
-								// 遷移動作と該当アプリ再起動動作が速いから、1秒の遅れ追加
-								try {
-									Thread.sleep(1000);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
+												"watchdog is running in front. wait for background. watching app will be started");
 							}
-						}
-
-						// 該当アプリ再起動
-						if (pullUpApp(pkg_name, cls_name) < 0) {
-							// 起動失敗
-							setLogText(cls_name + " start failed");
-							android.util.Log.d(TAG, cls_name + " start failed");
-							// Util.writeLog(cls_name + " start failed");
 						}
 
 					}

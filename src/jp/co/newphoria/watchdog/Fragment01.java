@@ -139,7 +139,7 @@ public class Fragment01 extends Fragment {
 			edit.putString(Util.DEFAULT_SHARE_KEY_PKG_NAME, Util.PACKAGE_NAME);
 			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_WATCHING, false);
 			edit.putBoolean(Util.DEFAULT_SHARE_KEY_FIRST_INSTALL, false);
-			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_BOOT_START, true);
+			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_BOOT_START, false);
 			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_AUTO_UNLOCK, true);
 			edit.putBoolean(Util.DEFAULT_SHARE_KEY_IS_NOTICE_ENABLE, true);
 			edit.commit();
