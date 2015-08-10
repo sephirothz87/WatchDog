@@ -274,7 +274,6 @@ public class WatchService extends Service {
 												"watchdog is running in front. wait for background. watching app will be started");
 							}
 						}
-
 					}
 
 					// 監視時間間隔後、監視ハンドラーに再送信
