@@ -1,5 +1,6 @@
 package jp.co.newphoria.watchdog.service;
 
+import jp.co.newphoria.watchdog.MainActivity;
 import jp.co.newphoria.watchdog.R;
 import jp.co.newphoria.watchdog.module.ProcessInfo;
 import jp.co.newphoria.watchdog.util.Util;
@@ -38,8 +39,9 @@ import android.support.v4.content.LocalBroadcastManager;
  * 2015-8-04	Zhong Zhicong	通知表示機能追加
  * 2015-8-04	Zhong Zhicong	自動的にロック有効/無効設定機能追加
  * 2015-8-04	Zhong Zhicong	WatchDogアプリが最前判定方式変更
- * 2015-8-04	Zhong Zhicong	WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能追加
- * 2015-8-04	Zhong Zhicong	機能変更：WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能
+ * 2015-8-06	Zhong Zhicong	WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能追加
+ * 2015-8-10	Zhong Zhicong	機能変更：WatchDog アプリがフォアグラウンドの状態で、監視対象アプリが停止すると WatchDog アプリがバックグラウンドに遷移した後に監視対象アプリがフォアグラウンドになる機能
+ * 2015-8-11	Zhong Zhicong	watchdogパッケージ名、起動クラス名取得方法変更。システムAPIによって取得する
  */
 @SuppressWarnings("deprecation")
 public class WatchService extends Service {
@@ -66,6 +68,9 @@ public class WatchService extends Service {
 	// 通知表示マネジャー対象
 	private NotificationManager mNotificationManager;
 
+	// コンテキスト
+	private Context mContext;
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -79,6 +84,7 @@ public class WatchService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		mContext = this.getApplicationContext();
 		mSharedPrefer = getSharedPreferences(Util.DEFAULT_SHARE_NAME,
 				Activity.MODE_PRIVATE);
 		mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -216,7 +222,7 @@ public class WatchService extends Service {
 							// 監視対象アプリは最前ではない、WatchDog最前Activity取得
 							RunningAppProcessInfo rainfo_watchdog = ProcessInfo
 									.getProcessInfoByPName(mActivityManager,
-											Util.WATCH_DOG_PACKAGE_NAME);
+											mContext.getPackageName());
 							if (rainfo_watchdog != null) {
 								if (!ProcessInfo.isTopProcess(mActivityManager,
 										rainfo_watchdog)) {
@@ -250,14 +256,13 @@ public class WatchService extends Service {
 						android.util.Log.d(TAG, pkg_name + " is stop");
 						// Util.writeLog(pkg_name + " is stop");
 
-						// WatchDogアプリフォアグラウンド状態で、バックグラウンドに遷移
 						RunningAppProcessInfo rainfo_watchdog = ProcessInfo
 								.getProcessInfoByPName(mActivityManager,
-										Util.WATCH_DOG_PACKAGE_NAME);
+										mContext.getPackageName());
 						if (rainfo_watchdog != null) {
 							if (!ProcessInfo.isTopProcess(mActivityManager,
 									rainfo_watchdog)) {
-								// 該当アプリ再起動
+								// WatchDogアプリバックグラウンド状態、該当アプリ再起動
 								if (pullUpApp(pkg_name, cls_name) < 0) {
 									// 起動失敗
 									setLogText(cls_name + " start failed");
@@ -357,8 +362,8 @@ public class WatchService extends Service {
 		Intent intent = new Intent(Intent.ACTION_MAIN);
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);
 		intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-		ComponentName com_name = new ComponentName(Util.WATCH_DOG_PACKAGE_NAME,
-				Util.WATCH_DOG_LAUNCHER_NAME);
+		ComponentName com_name = new ComponentName(mContext.getPackageName(),
+				MainActivity.class.getName());
 		intent.setComponent(com_name);
 		PendingIntent p_intent = PendingIntent.getActivity(
 				getApplicationContext(), 0, intent,

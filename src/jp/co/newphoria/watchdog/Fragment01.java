@@ -42,6 +42,7 @@ import android.widget.TextView;
  * 2015-7-24	Zhong Zhicong	Callback用BroadcastReceiverはLocalBroadcastManager利用になる
  * 2015-8-04	Zhong Zhicong	通知表示と有効/無効設定機能追加
  * 2015-8-04	Zhong Zhicong	自動的にロック有効/無効設定機能追加
+ * 2015-8-11	Zhong Zhicong	watchdogパッケージ名、起動クラス名取得方法変更。システムAPIによって取得する
  */
 public class Fragment01 extends Fragment {
 	// ログタッグ
@@ -362,8 +363,9 @@ public class Fragment01 extends Fragment {
 		Intent intent = new Intent(Intent.ACTION_MAIN);
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);
 		intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-		ComponentName com_name = new ComponentName(Util.WATCH_DOG_PACKAGE_NAME,
-				Util.WATCH_DOG_LAUNCHER_NAME);
+		ComponentName com_name = new ComponentName(getActivity()
+				.getApplicationContext().getPackageName(),
+				MainActivity.class.getName());
 		intent.setComponent(com_name);
 		PendingIntent p_intent = PendingIntent.getActivity(getActivity()
 				.getApplicationContext(), 0, intent,

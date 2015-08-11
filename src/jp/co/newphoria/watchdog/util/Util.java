@@ -47,10 +47,6 @@ public class Util {
 	public static final String PACKAGE_NAME = "jp.co.newphoria.signagedemo1";
 	// ディフォルト起動クラス名
 	public static final String CLASS_NAME = "jp.co.newphoria.signagedemo1.MainActivity";
-	// WatchDogパッケージ名
-	public static final String WATCH_DOG_PACKAGE_NAME = "jp.co.newphoria.watchdog";
-	// WatchDog起動クラス名
-	public static final String WATCH_DOG_LAUNCHER_NAME = "jp.co.newphoria.watchdog.MainActivity";
 
 	// 監視開始ステータステキスト
 	public static final String TXT_START_WATCHING = "監視中";
